@@ -8,7 +8,10 @@ import {
   TextInput,
   Alert,
   Switch,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { useAppContext } from '../contexts/AppContext';
@@ -20,7 +23,7 @@ interface FormData {
   amount: string;
   category: string;
   type: 'expense' | 'income';
-  dueDate: string;
+  dueDate: Date;
   isRecurring: boolean;
 }
 
@@ -48,6 +51,8 @@ const categories = {
 export default function AddTransactionScreen() {
   const { addTransaction } = useAppContext();
   const [selectedType, setSelectedType] = useState<'expense' | 'income'>('expense');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   
   const { control, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormData>({
     defaultValues: {
@@ -55,7 +60,7 @@ export default function AddTransactionScreen() {
       amount: '',
       category: '',
       type: 'expense',
-      dueDate: new Date().toISOString().split('T')[0],
+      dueDate: selectedDate,
       isRecurring: false,
     },
   });
@@ -67,7 +72,7 @@ export default function AddTransactionScreen() {
         amount: parseFloat(data.amount.replace(',', '.')),
         category: data.category,
         type: data.type,
-        dueDate: new Date(data.dueDate),
+        dueDate: data.dueDate,
         isRecurring: data.isRecurring,
         status: 'pending',
       };
@@ -77,7 +82,10 @@ export default function AddTransactionScreen() {
       Alert.alert(
         'Sucesso!',
         'Transação adicionada com sucesso.',
-        [{ text: 'OK', onPress: () => reset() }]
+        [{ text: 'OK', onPress: () => {
+          reset();
+          setSelectedDate(new Date());
+        }}]
       );
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível adicionar a transação. Tente novamente.');
@@ -91,22 +99,48 @@ export default function AddTransactionScreen() {
   };
 
   const formatAmountInput = (value: string) => {
-    const numericValue = value.replace(/[^0-9,]/g, '');
-    const parts = numericValue.split(',');
-    if (parts.length > 2) {
-      return parts[0] + ',' + parts[1];
+    // Remove tudo que não é número
+    const onlyNumbers = value.replace(/[^0-9]/g, '');
+    
+    // Se está vazio, retorna vazio
+    if (onlyNumbers === '') return '';
+    
+    // Converte para número (em centavos) e depois para reais
+    const numberInCents = parseInt(onlyNumbers, 10);
+    const numberInReais = numberInCents / 100;
+    
+    // Formata com 2 casas decimais e substitui ponto por vírgula
+    return numberInReais.toFixed(2).replace('.', ',');
+  };
+
+  const onDateChange = (event: any, date?: Date) => {
+    setShowDatePicker(false);
+    if (date) {
+      setSelectedDate(date);
+      setValue('dueDate', date);
     }
-    return numericValue;
+  };
+
+  const formatDateForDisplay = (date: Date) => {
+    return date.toLocaleDateString('pt-BR');
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Adicionar Transação</Text>
-        <Text style={styles.subtitle}>Registre seus gastos e receitas</Text>
-      </View>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior="height"
+    >
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Adicionar Transação</Text>
+          <Text style={styles.subtitle}>Registre seus gastos e receitas</Text>
+        </View>
 
-      <View style={styles.form}>
+        <View style={styles.form}>
         <View style={styles.typeSelector}>
           <TouchableOpacity
             style={[
@@ -244,15 +278,26 @@ export default function AddTransactionScreen() {
           <Controller
             control={control}
             rules={{ required: 'Data é obrigatória' }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={[styles.input, errors.dueDate && styles.inputError]}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                placeholder="AAAA-MM-DD"
-                placeholderTextColor="#999"
-              />
+            render={({ field: { value } }) => (
+              <>
+                <TouchableOpacity
+                  style={[styles.dateInput, errors.dueDate && styles.inputError]}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={styles.dateText}>
+                    {formatDateForDisplay(value)}
+                  </Text>
+                  <Ionicons name="calendar" size={20} color="#666" />
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display="default"
+                    onChange={onDateChange}
+                  />
+                )}
+              </>
             )}
             name="dueDate"
           />
@@ -289,8 +334,9 @@ export default function AddTransactionScreen() {
           <Ionicons name="add" size={24} color="white" />
           <Text style={styles.submitButtonText}>Adicionar Transação</Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -441,5 +487,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  dateInput: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#333',
   },
 });

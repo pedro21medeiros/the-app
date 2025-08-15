@@ -10,7 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAppContext } from '../contexts/AppContext';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { formatCurrency, formatDate, isOverdue, isDueToday, getDaysUntilDue } from '../utils/formatters';
+import { formatCurrency, formatDate, isOverdue, isDueToday, formatDaysUntilDue } from '../utils/formatters';
 import { Transaction } from '../types';
 
 export default function HomeScreen() {
@@ -154,7 +154,7 @@ export default function HomeScreen() {
                   ]}>
                     {formatDate(transaction.dueDate)}
                     {!isOverdue(transaction.dueDate) && !isDueToday(transaction.dueDate) && 
-                      ` (${getDaysUntilDue(transaction.dueDate)} dias)`
+                      ` (${formatDaysUntilDue(transaction.dueDate)})`
                     }
                   </Text>
                 </View>

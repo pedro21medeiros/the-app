@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppContext } from '../contexts/AppContext';
@@ -192,28 +193,35 @@ export default function TransactionHistoryScreen() {
       </View>
 
       <View style={styles.filterContainer}>
-        {filterButtons.map((button) => (
-          <TouchableOpacity
-            key={button.key}
-            style={[
-              styles.filterButton,
-              filter === button.key && styles.filterButtonActive
-            ]}
-            onPress={() => setFilter(button.key)}
-          >
-            <Ionicons 
-              name={button.icon as any} 
-              size={16} 
-              color={filter === button.key ? 'white' : '#666'} 
-            />
-            <Text style={[
-              styles.filterButtonText,
-              { color: filter === button.key ? 'white' : '#666' }
-            ]}>
-              {button.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterContent}
+          style={styles.filterScrollView}
+        >
+          {filterButtons.map((button) => (
+            <TouchableOpacity
+              key={button.key}
+              style={[
+                styles.filterButton,
+                filter === button.key && styles.filterButtonActive
+              ]}
+              onPress={() => setFilter(button.key)}
+            >
+              <Ionicons 
+                name={button.icon as any} 
+                size={16} 
+                color={filter === button.key ? 'white' : '#666'} 
+              />
+              <Text style={[
+                styles.filterButtonText,
+                { color: filter === button.key ? 'white' : '#666' }
+              ]}>
+                {button.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {filteredTransactions.length === 0 ? (
@@ -283,33 +291,48 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statValue: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   filterContainer: {
-    flexDirection: 'row',
+    backgroundColor: '#f8f9fa',
+    paddingTop: 8,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  filterScrollView: {
     paddingHorizontal: 20,
-    marginBottom: 16,
-    gap: 8,
+  },
+  filterContent: {
+    paddingRight: 20,
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    marginRight: 12,
+    borderRadius: 25,
     backgroundColor: 'white',
     borderWidth: 1,
     borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   filterButtonActive: {
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
   },
   filterButtonText: {
-    marginLeft: 4,
-    fontSize: 12,
-    fontWeight: '500',
+    marginLeft: 6,
+    fontSize: 15,
+    fontWeight: '600',
   },
   listContainer: {
     paddingHorizontal: 20,

@@ -30,6 +30,11 @@ export function getDaysUntilDue(dueDate: Date | string): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
+export function formatDaysUntilDue(dueDate: Date | string): string {
+  const days = getDaysUntilDue(dueDate);
+  return `${days} ${days === 1 ? 'dia' : 'dias'}`;
+}
+
 export function isOverdue(dueDate: Date | string): boolean {
   const dateObj = typeof dueDate === 'string' ? parseISO(dueDate) : dueDate;
   return isBefore(dateObj, new Date()) && !isToday(dateObj);
