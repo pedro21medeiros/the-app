@@ -67,7 +67,7 @@ export default function AddTransactionScreen() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'> = {
+      const baseTransaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'> = {
         description: data.description,
         amount: parseFloat(data.amount.replace(',', '.')),
         category: data.category,
@@ -77,16 +77,40 @@ export default function AddTransactionScreen() {
         status: 'pending',
       };
 
-      await addTransaction(transaction);
-      
-      Alert.alert(
-        'Sucesso!',
-        'Transação adicionada com sucesso.',
-        [{ text: 'OK', onPress: () => {
-          reset();
-          setSelectedDate(new Date());
-        }}]
-      );
+      if (data.isRecurring) {
+        // Gerar 12 transações mensais
+        for (let i = 0; i < 12; i++) {
+          const nextMonthDate = new Date(data.dueDate);
+          nextMonthDate.setMonth(nextMonthDate.getMonth() + i);
+          
+          const recurringTransaction = {
+            ...baseTransaction,
+            dueDate: nextMonthDate,
+          };
+          
+          await addTransaction(recurringTransaction);
+        }
+        
+        Alert.alert(
+          'Sucesso!',
+          '12 transações recorrentes criadas com sucesso.',
+          [{ text: 'OK', onPress: () => {
+            reset();
+            setSelectedDate(new Date());
+          }}]
+        );
+      } else {
+        await addTransaction(baseTransaction);
+        
+        Alert.alert(
+          'Sucesso!',
+          'Transação adicionada com sucesso.',
+          [{ text: 'OK', onPress: () => {
+            reset();
+            setSelectedDate(new Date());
+          }}]
+        );
+      }
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível adicionar a transação. Tente novamente.');
     }

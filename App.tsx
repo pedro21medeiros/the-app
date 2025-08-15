@@ -11,6 +11,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import AddTransactionScreen from './src/screens/AddTransactionScreen';
 import TransactionHistoryScreen from './src/screens/TransactionHistoryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import RecurringTransactionsScreen from './src/screens/RecurringTransactionsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -25,6 +26,28 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
+
+function HistoryStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="HistoryMain" 
+        component={TransactionHistoryScreen} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="RecurringTransactions" 
+        component={RecurringTransactionsScreen} 
+        options={{ 
+          title: 'Transações Recorrentes',
+          headerStyle: { backgroundColor: '#007AFF' },
+          headerTintColor: 'white',
+          headerTitleStyle: { fontWeight: 'bold' }
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
 
 function MainTabs() {
   return (
@@ -64,7 +87,7 @@ function MainTabs() {
       />
       <Tab.Screen 
         name="History" 
-        component={TransactionHistoryScreen} 
+        component={HistoryStack} 
         options={{ tabBarLabel: 'Histórico' }}
       />
       <Tab.Screen 

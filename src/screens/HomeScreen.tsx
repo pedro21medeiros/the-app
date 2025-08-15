@@ -10,7 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAppContext } from '../contexts/AppContext';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { formatCurrency, formatDate, isOverdue, isDueToday, formatDaysUntilDue } from '../utils/formatters';
+import { formatCurrency, formatDate, isOverdue, isDueToday, formatDaysUntilDue, isSameMonth, getCurrentMonth } from '../utils/formatters';
 import { Transaction } from '../types';
 
 export default function HomeScreen() {
@@ -21,8 +21,15 @@ export default function HomeScreen() {
   }
 
   const { pendingTransactions, totalBalance, overdueCount, dueTodayCount } = useMemo(() => {
-    const pending = transactions.filter(t => t.status === 'pending');
-    const balance = transactions
+    const currentMonth = getCurrentMonth();
+    
+    // Filtrar apenas transações do mês atual
+    const currentMonthTransactions = transactions.filter(t => 
+      isSameMonth(t.dueDate, currentMonth)
+    );
+    
+    const pending = currentMonthTransactions.filter(t => t.status === 'pending');
+    const balance = currentMonthTransactions
       .filter(t => t.status === 'paid')
       .reduce((acc, t) => acc + (t.type === 'income' ? t.amount : -t.amount), 0);
     
@@ -40,9 +47,12 @@ export default function HomeScreen() {
   }, [transactions]);
 
   const handleMarkAsPaid = (transaction: Transaction) => {
+    const actionText = transaction.type === 'income' ? 'recebimento' : 'pagamento';
+    const titleText = transaction.type === 'income' ? 'Marcar como Recebido' : 'Marcar como Pago';
+    
     Alert.alert(
-      'Marcar como Pago',
-      `Confirma o pagamento de ${formatCurrency(transaction.amount)}?`,
+      titleText,
+      `Confirma o ${actionText} de ${formatCurrency(transaction.amount)}?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         { 
@@ -163,7 +173,9 @@ export default function HomeScreen() {
                   style={styles.payButton}
                   onPress={() => handleMarkAsPaid(transaction)}
                 >
-                  <Text style={styles.payButtonText}>Pagar</Text>
+                  <Text style={styles.payButtonText}>
+                    {transaction.type === 'income' ? 'Receber' : 'Pagar'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>

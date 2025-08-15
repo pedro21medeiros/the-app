@@ -5,16 +5,30 @@ App de gestão financeira pessoal desenvolvido com React Native + Expo + Supabas
 ## Funcionalidades
 
 ✅ **Gestão de Transações**
-- Adicionar receitas e despesas
-- Categorizar transações
+- Adicionar receitas e despesas com input monetário inteligente
+- Categorizar transações (Alimentação, Transporte, Moradia, etc.)
 - Marcar como pago/pendente
-- Histórico completo com filtros
+- Histórico completo com filtros avançados
+- Seletor de data intuitivo com calendário nativo
+
+✅ **Transações Recorrentes** 
+- Criar automaticamente 12 transações mensais
+- Gerenciar séries de transações recorrentes
+- Visualizar próximas datas de vencimento
+- Excluir ou editar transações recorrentes em grupo
 
 ✅ **Dashboard Inteligente**
-- Visão geral das finanças
+- Visão geral das finanças do mês atual
 - Alertas de contas em atraso
-- Próximos vencimentos
-- Saldo atual
+- Próximos vencimentos ordenados por data
+- Saldo atual com receitas e gastos
+- Filtro automático por mês
+
+✅ **Navegação Temporal**
+- Histórico com navegação entre meses
+- Visualizar transações futuras
+- Estatísticas por mês específico
+- Botões de navegação mês anterior/próximo
 
 ✅ **Notificações Locais**
 - Lembretes automáticos de vencimento
@@ -23,19 +37,23 @@ App de gestão financeira pessoal desenvolvido com React Native + Expo + Supabas
 
 ✅ **Interface Moderna**
 - Design iOS/Android nativo
-- Navegação por abas
+- Navegação por abas + stack navigation
 - Estados de loading
-- Feedback visual
+- Input monetário formatado automaticamente
+- Filtros horizontais com scroll
+- Layout responsivo e otimizado
 
 ## Tecnologias
 
 - **React Native** + **Expo** - Framework mobile
 - **TypeScript** - Tipagem estática  
 - **Supabase** - Backend as a Service (PostgreSQL)
-- **React Navigation** - Navegação
-- **React Hook Form** - Formulários
+- **React Navigation** - Navegação (Tab + Stack)
+- **React Hook Form** - Formulários e validação
+- **@react-native-community/datetimepicker** - Seletor de data nativo
 - **Expo Notifications** - Notificações locais
-- **date-fns** - Manipulação de datas
+- **date-fns** - Manipulação e formatação de datas
+- **Ionicons** - Ícones nativos
 
 ## Setup do Projeto
 
@@ -69,6 +87,7 @@ src/
 │   ├── HomeScreen.tsx
 │   ├── AddTransactionScreen.tsx
 │   ├── TransactionHistoryScreen.tsx
+│   ├── RecurringTransactionsScreen.tsx
 │   └── SettingsScreen.tsx
 ├── services/            # Integração com APIs
 │   ├── supabase.ts
@@ -87,23 +106,36 @@ sql/                     # Scripts SQL para Supabase
 ### Adicionar Transação
 1. Toque na aba "Adicionar"
 2. Escolha entre Gasto ou Receita
-3. Preencha descrição, valor e categoria
-4. Defina a data de vencimento
-5. Marque como recorrente se necessário
+3. Preencha descrição e valor (digite apenas números - formato automático)
+4. Selecione uma categoria das opções horizontais
+5. Toque no campo de data para abrir o calendário
+6. Marque como recorrente para criar 12 transações mensais
+
+### Input Monetário Inteligente
+- Digite apenas números: `1234` vira `12,34`
+- Funciona como calculadora: cada dígito representa centavos
+- Exemplo: `68` = R$ 0,68, `6800` = R$ 68,00
 
 ### Marcar como Pago
 - Na tela inicial, toque em "Pagar" na transação
 - Ou no histórico, use o botão verde com ✓
 
-### Configurar Notificações
-1. Vá em "Configurações"
-2. Ative/desative notificações
-3. Escolha quantos dias antes ser lembrado
+### Navegar entre Meses
+- Na tela de histórico, use as setas ← → para navegar
+- Toque no nome do mês para voltar ao mês atual
+- Estatísticas se atualizam automaticamente por mês
+
+### Gerenciar Transações Recorrentes
+1. No histórico, toque em "Recorrentes" 
+2. Visualize séries de transações agrupadas
+3. Veja quantas restam e próximas datas
+4. Exclua séries inteiras ou veja detalhes
 
 ### Visualizar Histórico
-- Tela "Histórico" mostra todas as transações
-- Use os filtros para ver apenas pendentes, pagas, etc.
-- Estatísticas no topo mostram resumo
+- Tela "Histórico" mostra transações do mês selecionado
+- Use os filtros horizontais (Todas, Pendentes, Pagas, Gastos, Receitas)
+- Filtros têm scroll horizontal para ver todas as opções
+- Estatísticas no topo mostram resumo do mês
 
 ## Deploy
 
@@ -145,14 +177,29 @@ Implemente sincronização com Google Drive (não incluído)
 - Teste com data próxima (amanhã)
 - Verifique se o app está funcionando em segundo plano
 
+## Funcionalidades Implementadas ✅
+
+- [x] **Transações básicas** - Criar, editar, excluir receitas e despesas
+- [x] **Input monetário inteligente** - Formato automático baseado em centavos
+- [x] **Seletor de data nativo** - Calendário integrado do sistema
+- [x] **Transações recorrentes** - Geração automática de 12 meses
+- [x] **Navegação temporal** - Visualizar histórico por mês
+- [x] **Filtros avançados** - Por status, tipo, com scroll horizontal
+- [x] **Dashboard inteligente** - Visão do mês atual com alertas
+- [x] **Gerenciamento de recorrentes** - Tela dedicada para séries
+- [x] **Layout responsivo** - Adaptado para diferentes tamanhos
+- [x] **Notificações locais** - Lembretes de vencimento
+
 ## Próximas funcionalidades
 
 - [ ] Backup para Google Drive
-- [ ] Relatórios mensais
-- [ ] Gráficos de gastos
+- [ ] Relatórios mensais com gráficos
 - [ ] Importação de extrato bancário
 - [ ] Modo escuro
-- [ ] Múltiplas contas
+- [ ] Múltiplas contas/carteiras
+- [ ] Metas de gastos mensais
+- [ ] Exportação para PDF/Excel
+- [ ] Sincronização entre dispositivos
 
 ## Licença
 

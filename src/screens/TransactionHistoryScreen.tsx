@@ -8,25 +8,30 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppContext } from '../contexts/AppContext';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { formatCurrency, formatDate, isSameMonth, getCurrentMonth, getNextMonth, formatMonthYear } from '../utils/formatters';
 import { Transaction } from '../types';
 
 type FilterType = 'all' | 'pending' | 'paid' | 'expense' | 'income';
 
 export default function TransactionHistoryScreen() {
   const { transactions, deleteTransaction, markAsPaid, loading } = useAppContext();
+  const [filter, setFilter] = useState<FilterType>('all');
+  const [currentMonth, setCurrentMonth] = useState(getCurrentMonth());
+  const navigation = useNavigation();
 
   if (loading) {
     return <LoadingSpinner message="Carregando histórico..." />;
   }
-  const [filter, setFilter] = useState<FilterType>('all');
 
   const filteredTransactions = useMemo(() => {
-    let filtered = [...transactions];
+    // Primeiro, filtrar por mês
+    let filtered = transactions.filter(t => isSameMonth(t.dueDate, currentMonth));
 
+    // Depois, aplicar filtros de tipo/status
     switch (filter) {
       case 'pending':
         filtered = filtered.filter(t => t.status === 'pending');
@@ -45,20 +50,24 @@ export default function TransactionHistoryScreen() {
     }
 
     return filtered.sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
     );
-  }, [transactions, filter]);
+  }, [transactions, filter, currentMonth]);
 
   const stats = useMemo(() => {
-    const totalIncome = transactions
+    const currentMonthTransactions = transactions.filter(t => 
+      isSameMonth(t.dueDate, currentMonth)
+    );
+    
+    const totalIncome = currentMonthTransactions
       .filter(t => t.type === 'income' && t.status === 'paid')
       .reduce((sum, t) => sum + t.amount, 0);
     
-    const totalExpense = transactions
+    const totalExpense = currentMonthTransactions
       .filter(t => t.type === 'expense' && t.status === 'paid')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const pendingExpense = transactions
+    const pendingExpense = currentMonthTransactions
       .filter(t => t.type === 'expense' && t.status === 'pending')
       .reduce((sum, t) => sum + t.amount, 0);
 
@@ -68,7 +77,7 @@ export default function TransactionHistoryScreen() {
       pendingExpense,
       balance: totalIncome - totalExpense,
     };
-  }, [transactions]);
+  }, [transactions, currentMonth]);
 
   const handleDeleteTransaction = (transaction: Transaction) => {
     Alert.alert(
@@ -86,9 +95,12 @@ export default function TransactionHistoryScreen() {
   };
 
   const handleMarkAsPaid = (transaction: Transaction) => {
+    const actionText = transaction.type === 'income' ? 'recebimento' : 'pagamento';
+    const titleText = transaction.type === 'income' ? 'Marcar como Recebido' : 'Marcar como Pago';
+    
     Alert.alert(
-      'Marcar como Pago',
-      `Confirma o pagamento de ${formatCurrency(transaction.amount)}?`,
+      titleText,
+      `Confirma o ${actionText} de ${formatCurrency(transaction.amount)}?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         { 
@@ -136,7 +148,9 @@ export default function TransactionHistoryScreen() {
             onPress={() => handleMarkAsPaid(item)}
           >
             <Ionicons name="checkmark" size={16} color="white" />
-            <Text style={styles.payButtonText}>Pagar</Text>
+            <Text style={styles.payButtonText}>
+              {item.type === 'income' ? 'Receber' : 'Pagar'}
+            </Text>
           </TouchableOpacity>
         )}
         
@@ -159,11 +173,51 @@ export default function TransactionHistoryScreen() {
     { key: 'income', label: 'Receitas', icon: 'arrow-up' },
   ] as const;
 
+  const goToPreviousMonth = () => {
+    const prevMonth = new Date(currentMonth);
+    prevMonth.setMonth(prevMonth.getMonth() - 1);
+    setCurrentMonth(prevMonth);
+  };
+
+  const goToNextMonth = () => {
+    setCurrentMonth(getNextMonth(currentMonth));
+  };
+
+  const goToCurrentMonth = () => {
+    setCurrentMonth(getCurrentMonth());
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Histórico</Text>
-        <Text style={styles.subtitle}>Gerencie suas transações</Text>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.title}>Histórico</Text>
+            <Text style={styles.subtitle}>Gerencie suas transações</Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.recurringButton}
+            onPress={() => navigation.navigate('RecurringTransactions' as never)}
+          >
+            <Ionicons name="repeat" size={20} color="white" />
+            <Text style={styles.recurringButtonText}>Recorrentes</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.monthNavigation}>
+          <TouchableOpacity onPress={goToPreviousMonth} style={styles.monthButton}>
+            <Ionicons name="chevron-back" size={20} color="white" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity onPress={goToCurrentMonth} style={styles.monthSelector}>
+            <Text style={styles.monthText}>{formatMonthYear(currentMonth)}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity onPress={goToNextMonth} style={styles.monthButton}>
+            <Ionicons name="chevron-forward" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.statsContainer}>
@@ -257,6 +311,55 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 60,
     backgroundColor: '#007AFF',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  recurringButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  recurringButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  monthNavigation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  monthButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  monthSelector: {
+    marginHorizontal: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  monthText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    textTransform: 'capitalize',
   },
   title: {
     fontSize: 24,

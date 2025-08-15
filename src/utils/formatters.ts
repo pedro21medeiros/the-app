@@ -46,5 +46,26 @@ export function isDueToday(dueDate: Date | string): boolean {
 }
 
 export function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
+
+export function isSameMonth(date1: Date | string, date2: Date | string): boolean {
+  const d1 = typeof date1 === 'string' ? parseISO(date1) : date1;
+  const d2 = typeof date2 === 'string' ? parseISO(date2) : date2;
+  
+  return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth();
+}
+
+export function getCurrentMonth(): Date {
+  return new Date();
+}
+
+export function getNextMonth(date: Date = new Date()): Date {
+  const nextMonth = new Date(date);
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+  return nextMonth;
+}
+
+export function formatMonthYear(date: Date): string {
+  return format(date, 'MMMM yyyy', { locale: ptBR });
 }
